@@ -49,6 +49,33 @@ def naked_twins(values):
     strategy repeatedly).
     """
     # TODO: Implement this function!
+    # TODO: Implement this function!
+    #Get all keys that has length has 2
+    box_2=[sqr for sqr in boxes if len(values[sqr])==2]
+    #display(values)
+    #get all the twins paird
+    list_twins=[]
+    for sqr in box_2:
+        #print(sqr)
+        for y in peers[sqr]:
+            if(values[sqr]==values[y]):
+                if(sqr!=y):
+                    list_twins.append((sqr,y))
+    #print(list_twins)        
+    
+    common_dict=dict()
+    for(one, two) in list_twins:
+        common_dict[one]=list(peers[one]-(peers[one]-peers[two]))
+
+    for box, box_new in common_dict.items():
+        #print(box)
+        #print(box_new)
+        for singlebox in box_new:
+            digit=values[box]
+            for dig in digit:
+                values[singlebox]=values[singlebox].replace(dig,'')
+    
+    return values
     raise NotImplementedError
 
 
@@ -69,6 +96,15 @@ def eliminate(values):
         The values dictionary with the assigned values eliminated from peers
     """
     # TODO: Copy your code from the classroom to complete this function
+    n_values = (u for u in values.keys() if len(values[u])==1)
+    
+    for keys in n_values:
+        #print(keys)
+        n=values[keys]
+        #print(n)
+        for peer in peers[keys]:
+            #print(peer)
+            values[peer]=values[peer].replace(n,'')    
     raise NotImplementedError
 
 
@@ -93,6 +129,16 @@ def only_choice(values):
     You should be able to complete this function by copying your code from the classroom
     """
     # TODO: Copy your code from the classroom to complete this function
+    for unit in unitlist:
+        #print(unit)
+        for digit in '123456789':
+            #print(digit)
+            #display(values)
+            dplaces = [box for box in unit if digit in values[box]]
+            #print(dplaces)
+            if len(dplaces) == 1:
+                values[dplaces[0]] = digit
+            #display(values)
     raise NotImplementedError
 
 
@@ -111,6 +157,24 @@ def reduce_puzzle(values):
         no longer produces any changes, or False if the puzzle is unsolvable 
     """
     # TODO: Copy your code from the classroom and modify it to complete this function
+    stalled = False
+    while not stalled:
+        # Check how many boxes have a determined value
+        solved_values_before = len([box for box in values.keys() if len(values[box]) == 1])
+
+        # Your code here: Use the Eliminate Strategy
+        values = eliminate(values)
+        # Your code here: Use the Only Choice Strategy
+        values = only_choice(values)
+        values = naked_twins(values)
+        # Check how many boxes have a determined value, to compare
+        solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
+        # If no new values were added, stop the loop.
+        stalled = solved_values_before == solved_values_after
+        # Sanity check, return False if there is a box with zero available values:
+        if len([box for box in values.keys() if len(values[box]) == 0]):
+            return False
+    return values
     raise NotImplementedError
 
 
@@ -134,6 +198,35 @@ def search(values):
     and extending it to call the naked twins strategy.
     """
     # TODO: Copy your code from the classroom to complete this function
+    values = reduce_puzzle(values)
+
+    
+    if values is False:
+        return False ## Failed earlier
+    if all(len(values[sqr]) == 1 for sqr in boxes): 
+        return values ## Solved!
+        
+        
+        
+    
+    # Choose one of the unfilled squares with the fewest possibilities
+
+    val,sqr = min((len(values[sqr]), sqr) for sqr in boxes if len(values[sqr]) > 1)
+    #print('values')
+    #print(val)
+    #print(sqr)
+
+    # Now use recursion to solve each one of the resulting sudokus, and if one returns a value (not False), return that answer!
+    for value in values[sqr]:
+        next_state = values.copy()
+        next_state[sqr] = value
+        
+        board = search(next_state)
+        
+        if board:
+            return board
+        
+    raise NotImplementedError
     raise NotImplementedError
 
 
